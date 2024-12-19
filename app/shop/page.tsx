@@ -14,7 +14,7 @@ interface Product {
 // src/components/Shop.tsx
 
 const Shop: React.FC = () => {
-    const { addToCart, cart } = useCart(); // Utiliser le panier et la fonction d'ajout depuis le contexte
+    const { addToCart, cart } = useCart();
     const [products, setProducts] = useState<Product[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);

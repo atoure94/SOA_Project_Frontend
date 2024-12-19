@@ -1,19 +1,19 @@
-// src/pages/checkout.tsx
-
 'use client'
 
 import React, { useState } from 'react';
 import { useCart } from "@/components/context/CartContext";
-import { useRouter } from 'next/navigation';  // Update import
+import { useRouter } from 'next/navigation';
+import { useAuth } from "@/components/context/AuthContext";  // Import the AuthContext
 
 const CheckoutPage: React.FC = () => {
     const { cart } = useCart();
+    const { isLoggedIn } = useAuth();  // Use isLoggedIn from context
     const [formData, setFormData] = useState({
         name: '',
         address: '',
         email: '',
     });
-    const router = useRouter();  // Ensure it's used in a page context
+    const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -29,8 +29,14 @@ const CheckoutPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!isLoggedIn) {  // Check if user is logged in
+            alert('Vous devez être connecté pour finaliser votre commande.');
+            return;
+        }
+
         alert('Commande passée avec succès !');
-        router.push('/confirmation');  // Navigation after form submission
+        router.push('/confirmation');  // Redirect after form submission
     };
 
     return (

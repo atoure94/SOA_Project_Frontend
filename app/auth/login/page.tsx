@@ -1,24 +1,23 @@
 'use client'
 
+
 import React, { useState } from 'react';
 import Link from "next/link";
 import axios from 'axios';
-import {toast, ToastContainer} from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {navigate} from "next/dist/client/components/segment-cache/navigation";
-import {useRouter} from "next/navigation";
-
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/context/AuthContext";
 
 const Login = () => {
-    // State to store form inputs
-    const [emailOrPhone, setEmailOrPhone] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const navigation = useRouter()
+    const navigation = useRouter();
+    const { setIsLoggedIn } = useAuth();
 
-    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -26,61 +25,77 @@ const Login = () => {
 
         try {
             const response = await axios.post('http://localhost:8081/api/login', {
-                username: emailOrPhone,  // Make sure the backend expects "username"
+                username,
                 password
             });
 
-            // Handle login success
             if (response.status === 200) {
                 console.log('Login successful:', response.data);
                 toast.success('Login successful!');
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
 
+                // Enregistrer l'utilisateur dans le localStorage
+                const userData = response.data;
+                let users = JSON.parse(localStorage.getItem('users') || '[]');
+
+                // Vérifier si l'utilisateur existe déjà
+                const existingUser = users.find((user: any) => user.username === username);
+                if (!existingUser) {
+                    users.push(userData); // Ajouter un nouvel utilisateur
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+
+                // Mettre à jour les commandes de l'utilisateur (exemple)
+                let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const userOrders = orders.filter((order: any) => order.username === username);
+
+                // Simuler l'ajout d'une commande (vous pouvez ajuster cela selon la logique de votre projet)
+                const newOrder = { username, orderId: Date.now(), items: ["Item 1", "Item 2"] };
+                userOrders.push(newOrder);
+                orders = orders.filter((order: any) => order.username !== username); // Supprimer les anciennes commandes de cet utilisateur
+                orders.push(...userOrders); // Ajouter les commandes mises à jour
+                localStorage.setItem('orders', JSON.stringify(orders));
+
+                // Mettre à jour l'état global pour indiquer que l'utilisateur est connecté
+                setIsLoggedIn(true);
+
+                setTimeout(() => {
+                    navigation.push('/'); // Rediriger vers la page d'accueil
+                }, 1000);
             }
         } catch (error: any) {
-            // Handle error response
             if (error.response) {
-                setErrorMessage(error.response.data); // The backend error message
+                setErrorMessage(error.response.data);
             } else {
                 setErrorMessage('An error occurred. Please try again later.');
             }
             console.error('Login error:', error);
         } finally {
             setLoading(false);
-
         }
-
-
-
     };
 
     return (
-        <div className="flex items-center justify-center p-20 ">
+        <div className="flex items-center justify-center p-20">
             <div className="w-full max-w-md p-8 bg-white items-center justify-center border-2 border-black rounded-lg shadow-md border-b-black">
                 <h1 className='text-4xl font-bold text-center mb-6 text-black'>LOGIN</h1>
 
                 <form onSubmit={handleSubmit}>
-                    {/* Champ Email ou Téléphone */}
                     <div className="mb-8">
                         <input
                             type="text"
-                            placeholder="Email or Phone Number"
-                            value={emailOrPhone}
-                            onChange={(e) => setEmailOrPhone(e.target.value)}
+                            placeholder="Username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             className="w-full px-4 py-3 border-neutral-300 text-black rounded-xl bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
 
-                    {/* Mot de passe oublié */}
                     <div className="mb-2 text-right">
                         <Link href="/auth/forgot-password" className="text-sm text-black hover:underline">
                             forgot password
                         </Link>
                     </div>
 
-                    {/* Champ Mot de passe */}
                     <div className="mb-10">
                         <input
                             type="password"
@@ -91,10 +106,8 @@ const Login = () => {
                         />
                     </div>
 
-                    {/* Error message */}
                     {errorMessage && <div className="text-red-500 text-center mb-4">{errorMessage}</div>}
 
-                    {/* Bouton Login */}
                     <div className="flex justify-center">
                         <button
                             type="submit"
@@ -114,16 +127,16 @@ const Login = () => {
                 </p>
             </div>
 
-            {/* ToastContainer to show toast notifications */}
-            <ToastContainer position="top-right"
-                            autoClose={5000} // The toast will close after 5 seconds
-                            hideProgressBar
-                            newestOnTop
-                            closeOnClick
-                            rtl={false}
-                            pauseOnFocusLoss
-                            draggable
-                            pauseOnHover
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
             />
         </div>
     );

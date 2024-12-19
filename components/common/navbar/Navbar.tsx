@@ -1,15 +1,16 @@
-// src/components/Navbar.tsx
-
 'use client'
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from "@/components/context/CartContext";
+import {useAuth} from "@/components/context/AuthContext";
+
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { cart } = useCart(); // Utiliser le panier via le contexte
+    const { isLoggedIn } = useAuth(); // Utiliser le statut de connexion depuis le contexte
 
     // Obtenir le chemin actuel
     const pathname = usePathname();
@@ -63,11 +64,14 @@ const Navbar = () => {
                         </button>
                     </Link>
 
-                    <Link href="/auth/login" >
-                        <button className="bg-neutral-950 text-white text-4xl hover:bg-gray-700 px-4 py-2 rounded transition">
-                            LOGIN
-                        </button>
-                    </Link>
+                    {/* Masquer le bouton LOGIN si l'utilisateur est connecté */}
+                    {!isLoggedIn && !isAuthPage && (
+                        <Link href="/auth/login" >
+                            <button className="bg-neutral-950 text-white text-4xl hover:bg-gray-700 px-4 py-2 rounded transition">
+                                LOGIN
+                            </button>
+                        </Link>
+                    )}
                 </div>
             </div>
         </nav>
